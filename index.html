@@ -1,10 +1,342 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Dashboard Test</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Deborah Quazzo Angel Investment Dashboard</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --color-primary: #5B4FFF;
+            --color-secondary: #FF6B9D;
+            --color-accent: #00D4FF;
+            --color-bg: #FAFAFF;
+            --color-surface: #FFFFFF;
+            --color-text: #1E1B4B;
+            --color-text-light: #64748B;
+            --color-border: #E9E7FF;
+            --gradient-primary: linear-gradient(135deg, #5B4FFF 0%, #FF6B9D 100%);
+            --shadow-lg: 0 8px 24px rgba(91, 79, 255, 0.16);
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Poppins', -apple-system, BlinkMacSystemFont, sans-serif; background: var(--color-bg); color: var(--color-text); line-height: 1.6; }
+        .app { min-height: 100vh; }
+        .header { background: var(--gradient-primary); color: white; padding: 2.5rem 2rem 4rem; }
+        .header-content { max-width: 1600px; margin: 0 auto; }
+        .live-badge { display: inline-block; background: rgba(255,255,255,0.2); padding: 0.5rem 1rem; border-radius: 20px; font-size: 0.875rem; margin-bottom: 1rem; font-weight: 600; }
+        .live-dot { display: inline-block; width: 8px; height: 8px; background: #00FF00; border-radius: 50%; margin-right: 0.5rem; animation: pulse 2s infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        h1 { font-family: 'Space Grotesk', sans-serif; font-size: 2.75rem; font-weight: 800; margin-bottom: 0.5rem; letter-spacing: -0.03em; }
+        .subtitle { font-size: 1.125rem; opacity: 0.95; }
+        .stats-overview { max-width: 1600px; margin: -2.5rem auto 0; padding: 0 2rem 2rem; position: relative; z-index: 10; }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.25rem; }
+        .stat-card { background: var(--color-surface); border-radius: 20px; padding: 1.5rem; box-shadow: var(--shadow-lg); border: 2px solid var(--color-border); border-top: 3px solid var(--color-primary); }
+        .stat-icon { font-size: 1.5rem; margin-bottom: 0.5rem; display: block; }
+        .stat-label { font-size: 0.75rem; font-weight: 600; color: var(--color-text-light); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.5rem; }
+        .stat-value { font-size: 1.5rem; font-weight: 800; font-family: 'Space Grotesk', sans-serif; color: var(--color-primary); margin-bottom: 0.25rem; }
+        .stat-change { font-size: 0.8125rem; color: var(--color-text-light); font-weight: 500; }
+        .main-content { max-width: 1600px; margin: 0 auto; padding: 0 2rem 3rem; }
+        .filters { background: var(--color-surface); border-radius: 16px; padding: 1.5rem; margin-bottom: 2rem; box-shadow: 0 2px 8px rgba(91, 79, 255, 0.08); border: 2px solid var(--color-border); display: flex; gap: 1rem; flex-wrap: wrap; align-items: center; }
+        .search-input { padding: 0.875rem 1rem; border: 2px solid var(--color-border); border-radius: 12px; font-size: 0.95rem; font-family: inherit; min-width: 250px; flex: 1; }
+        .search-input:focus { outline: none; border-color: var(--color-primary); box-shadow: 0 0 0 3px rgba(91, 79, 255, 0.1); }
+        .filter-btn { padding: 0.875rem 1.25rem; border: 2px solid var(--color-border); background: var(--color-surface); border-radius: 12px; font-size: 0.875rem; font-weight: 600; font-family: inherit; cursor: pointer; color: var(--color-text); }
+        .filter-btn:hover { border-color: var(--color-primary); color: var(--color-primary); }
+        .filter-btn.active { background: var(--gradient-primary); border-color: transparent; color: white; }
+        .pdf-btn { padding: 0.875rem 1.5rem; background: var(--gradient-primary); border: none; border-radius: 12px; font-size: 0.875rem; font-weight: 600; font-family: inherit; cursor: pointer; color: white; }
+        .pdf-btn:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); }
+        .table-container { background: var(--color-surface); border-radius: 16px; overflow-x: auto; box-shadow: 0 2px 8px rgba(91, 79, 255, 0.08); border: 2px solid var(--color-border); }
+        table { width: 100%; border-collapse: collapse; }
+        thead { background: var(--gradient-primary); color: white; position: sticky; top: 0; z-index: 10; }
+        th { padding: 1rem; text-align: left; font-size: 0.8125rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; }
+        tbody tr { border-bottom: 1px solid var(--color-border); }
+        tbody tr:hover { background: rgba(91, 79, 255, 0.03); }
+        td { padding: 1rem; font-size: 0.9375rem; }
+        .status-badge { display: inline-block; padding: 0.375rem 0.75rem; border-radius: 20px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; }
+        .status-active { background: rgba(91, 79, 255, 0.1); color: var(--color-primary); }
+        .status-exited { background: rgba(16, 185, 129, 0.1); color: #10B981; }
+        .status-wroteoff { background: rgba(239, 68, 68, 0.1); color: #EF4444; }
+        .status-pending { background: rgba(251, 146, 60, 0.1); color: #FB923C; }
+        .loading { text-align: center; padding: 4rem; }
+        .spinner { width: 48px; height: 48px; border: 4px solid var(--color-border); border-top: 4px solid var(--color-primary); border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 1rem; }
+        .counter { text-align: center; padding: 0.75rem; color: var(--color-text-light); font-size: 0.9375rem; font-weight: 500; }
+        .error { color: #EF4444; background: #FEE; border: 2px solid #EF4444; border-radius: 12px; margin: 2rem; padding: 2rem; text-align: center; }
+        @media (max-width: 768px) { h1 { font-size: 2rem; } .stats-grid { grid-template-columns: 1fr; } }
+    </style>
 </head>
 <body>
-    <h1>This is vanilla HTML - no React, no Babel</h1>
-    <p>If you see this, GitHub Pages is working correctly.</p>
+    <div id="root"></div>
+ 
+    <script>
+        const SHEET_ID = '1eLRjrzyxKsHgynBc8tnQQBMjgfnSUQn-TJlQK3EFJR4';
+        const SHEET_NAME = 'MC Version Decemebr 2025 - THIS';
+        const SHEET_URL = 'https://docs.google.com/spreadsheets/d/' + SHEET_ID + '/gviz/tq?tqx=out:json&sheet=' + encodeURIComponent(SHEET_NAME);
+ 
+        let investments = [];
+        let searchTerm = '';
+        let statusFilter = 'All';
+        let holdPeriodFilter = 'All';
+ 
+        async function loadData() {
+            try {
+                const response = await fetch(SHEET_URL);
+                const text = await response.text();
+                const json = JSON.parse(text.substring(47).slice(0, -2));
+                const rows = json.table.rows;
+                
+                investments = [];
+                for (let i = 4; i < rows.length; i++) {
+                    const row = rows[i];
+                    if (!row.c || !row.c[1] || !row.c[1].v) continue;
+                    
+                    const company = row.c[1].v;
+                    if (!company || company.includes('Total') || company.includes('Capital') || company.includes('Residual')) continue;
+                    
+                    investments.push({
+                        company: company,
+                        status: row.c[2] ? row.c[2].v : '',
+                        amount_invested: parseFloat(row.c[4] ? row.c[4].v : 0) || 0,
+                        initial_date: row.c[6] ? row.c[6].f : '',
+                        exit_date: row.c[9] ? row.c[9].f : '',
+                        realized_proceeds: parseFloat(row.c[10] ? row.c[10].v : 0) || 0,
+                        fmv_today: parseFloat(row.c[12] ? row.c[12].v : 0) || 0,
+                        gain_loss: parseFloat(row.c[13] ? row.c[13].v : 0) || 0,
+                        multiple: parseFloat(row.c[14] ? row.c[14].v : 0) || 0,
+                    });
+                }
+                
+                render();
+                setInterval(loadData, 30000);
+            } catch (err) {
+                console.error('Error:', err);
+                document.getElementById('root').innerHTML = '<div class="error">Error loading data from Google Sheets</div>';
+            }
+        }
+ 
+        function calculateHoldPeriod(initialDate, exitDate, status) {
+            if (!initialDate) return { category: 'Unknown' };
+            
+            const start = new Date(initialDate);
+            const end = exitDate && status !== 'Active' ? new Date(exitDate) : new Date();
+            const diffYears = (end - start) / (1000 * 60 * 60 * 24 * 365.25);
+            
+            if (diffYears < 1) return { category: '< 1 year' };
+            if (diffYears < 2) return { category: '1-2 years' };
+            if (diffYears < 5) return { category: '3-5 years' };
+            if (diffYears < 10) return { category: '5-10 years' };
+            return { category: '10+ years' };
+        }
+ 
+        function formatCurrency(n) {
+            return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0 }).format(n);
+        }
+ 
+        function formatDate(d) {
+            if (!d) return '—';
+            return new Date(d).toLocaleDateString('en-US', { year: 'numeric', month: 'short' });
+        }
+ 
+        function getFiltered() {
+            let filtered = investments;
+            
+            if (statusFilter !== 'All') {
+                filtered = filtered.filter(i => i.status === statusFilter);
+            }
+            if (holdPeriodFilter !== 'All') {
+                filtered = filtered.filter(i => calculateHoldPeriod(i.initial_date, i.exit_date, i.status).category === holdPeriodFilter);
+            }
+            if (searchTerm) {
+                filtered = filtered.filter(i => i.company.toLowerCase().includes(searchTerm.toLowerCase()));
+            }
+            
+            return filtered;
+        }
+ 
+        function getStats() {
+            const total = investments.reduce((s, i) => s + i.amount_invested, 0);
+            const current = investments.reduce((s, i) => s + i.fmv_today, 0);
+            const realized = investments.reduce((s, i) => s + i.realized_proceeds, 0);
+            const gainloss = investments.reduce((s, i) => s + i.gain_loss, 0);
+            
+            return {
+                totalInvested: total,
+                currentValue: current,
+                totalRealized: realized,
+                totalGainLoss: gainloss,
+                totalCompanies: investments.length,
+                activeCount: investments.filter(i => i.status === 'Active').length,
+                exitedCount: investments.filter(i => i.status === 'Exited').length,
+                avgMultiple: total > 0 ? ((current + realized) / total).toFixed(2) : '0.00'
+            };
+        }
+ 
+        function getCounts(field) {
+            const counts = {};
+            investments.forEach(inv => {
+                if (field === 'status') {
+                    if (!counts[inv.status]) counts[inv.status] = 0;
+                    counts[inv.status]++;
+                }
+            });
+            return counts;
+        }
+ 
+        function render() {
+            const stats = getStats();
+            const filtered = getFiltered();
+            const statuses = getCounts('status');
+            
+            const html = `
+                <div class="app">
+                    <div class="header">
+                        <div class="header-content">
+                            <div class="live-badge"><span class="live-dot"></span>LIVE - Auto-updates</div>
+                            <h1>Deborah Quazzo Angel Investment Summary</h1>
+                            <div class="subtitle">Complete Portfolio • As of ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })} • ${stats.totalCompanies} Investments</div>
+                        </div>
+                    </div>
+ 
+                    <div class="stats-overview">
+                        <div class="stats-grid">
+                            <div class="stat-card">
+                                <span class="stat-icon">💰</span>
+                                <div class="stat-label">Total Invested</div>
+                                <div class="stat-value">${formatCurrency(stats.totalInvested)}</div>
+                                <div class="stat-change">${stats.totalCompanies} companies</div>
+                            </div>
+                            <div class="stat-card">
+                                <span class="stat-icon">🎉</span>
+                                <div class="stat-label">Realized Proceeds</div>
+                                <div class="stat-value">${formatCurrency(stats.totalRealized)}</div>
+                                <div class="stat-change">Cash returned</div>
+                            </div>
+                            <div class="stat-card">
+                                <span class="stat-icon">📈</span>
+                                <div class="stat-label">Residual Value</div>
+                                <div class="stat-value">${formatCurrency(stats.currentValue)}</div>
+                                <div class="stat-change">Current holdings</div>
+                            </div>
+                            <div class="stat-card">
+                                <span class="stat-icon">✨</span>
+                                <div class="stat-label">Total Gain/Loss</div>
+                                <div class="stat-value">${formatCurrency(stats.totalGainLoss)}</div>
+                                <div class="stat-change">${stats.avgMultiple}x TVPI</div>
+                            </div>
+                            <div class="stat-card">
+                                <span class="stat-icon">📊</span>
+                                <div class="stat-label">Active Holdings</div>
+                                <div class="stat-value">${stats.activeCount}</div>
+                                <div class="stat-change">Current investments</div>
+                            </div>
+                            <div class="stat-card">
+                                <span class="stat-icon">🚪</span>
+                                <div class="stat-label">Exits</div>
+                                <div class="stat-value">${stats.exitedCount}</div>
+                                <div class="stat-change">Successful exits</div>
+                            </div>
+                        </div>
+                    </div>
+ 
+                    <div class="main-content">
+                        <div class="filters">
+                            <input type="text" class="search-input" id="search" placeholder="Search companies..." value="${searchTerm}">
+                            <button class="filter-btn ${statusFilter === 'All' ? 'active' : ''}" onclick="setStatusFilter('All')">All (${investments.length})</button>
+                            <button class="filter-btn ${statusFilter === 'Active' ? 'active' : ''}" onclick="setStatusFilter('Active')">Active (${statuses['Active'] || 0})</button>
+                            <button class="filter-btn ${statusFilter === 'Pending' ? 'active' : ''}" onclick="setStatusFilter('Pending')">Pending (${statuses['Pending'] || 0})</button>
+                            <button class="filter-btn ${statusFilter === 'Exited' ? 'active' : ''}" onclick="setStatusFilter('Exited')">Exited (${statuses['Exited'] || 0})</button>
+                            <button class="filter-btn ${statusFilter === 'Wrote-Off' ? 'active' : ''}" onclick="setStatusFilter('Wrote-Off')">Written Off (${statuses['Wrote-Off'] || 0})</button>
+                            <button class="pdf-btn" onclick="exportCSV()">📊 CSV</button>
+                            <button class="pdf-btn" onclick="exportPDF()">📄 PDF</button>
+                        </div>
+ 
+                        <div class="counter">Showing ${filtered.length} of ${stats.totalCompanies} investments</div>
+ 
+                        <div class="table-container">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Company</th><th>Status</th><th>Date</th><th>Hold Period</th>
+                                        <th>Invested</th><th>Current Value</th><th>Realized</th><th>Gain/Loss</th><th>Multiple</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${filtered.map(inv => {
+                                        const hp = calculateHoldPeriod(inv.initial_date, inv.exit_date, inv.status);
+                                        const statusClass = 'status-' + inv.status.toLowerCase().replace('-', '');
+                                        return `
+                                            <tr>
+                                                <td style="font-weight: 600;">${inv.company}</td>
+                                                <td><span class="status-badge ${statusClass}">${inv.status}</span></td>
+                                                <td>${formatDate(inv.initial_date)}</td>
+                                                <td>${hp.category}</td>
+                                                <td>${formatCurrency(inv.amount_invested)}</td>
+                                                <td>${formatCurrency(inv.fmv_today)}</td>
+                                                <td>${formatCurrency(inv.realized_proceeds)}</td>
+                                                <td style="color: ${inv.gain_loss > 0 ? '#10B981' : inv.gain_loss < 0 ? '#EF4444' : 'inherit'}">${formatCurrency(inv.gain_loss)}</td>
+                                                <td style="font-weight: 600;">${inv.multiple ? inv.multiple.toFixed(1) + 'x' : '—'}</td>
+                                            </tr>
+                                        `;
+                                    }).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('root').innerHTML = html;
+            document.getElementById('search').addEventListener('input', (e) => {
+                searchTerm = e.target.value;
+                render();
+            });
+        }
+ 
+        function setStatusFilter(s) {
+            statusFilter = s;
+            render();
+        }
+ 
+        function exportCSV() {
+            const filtered = getFiltered();
+            const csv = [['Company','Status','Date','Hold Period','Invested','Current Value','Realized','Gain/Loss','Multiple']];
+            filtered.forEach(inv => {
+                const hp = calculateHoldPeriod(inv.initial_date, inv.exit_date, inv.status);
+                csv.push([inv.company, inv.status, inv.initial_date, hp.category, inv.amount_invested, inv.fmv_today, inv.realized_proceeds, inv.gain_loss, inv.multiple.toFixed(1)]);
+            });
+            const blob = new Blob([csv.map(r => r.join(',')).join('\n')], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'Quazzo_Portfolio_' + new Date().toISOString().split('T')[0] + '.csv';
+            a.click();
+        }
+ 
+        function exportPDF() {
+            const filtered = getFiltered();
+            const jsPDF = window.jspdf.jsPDF;
+            const doc = new jsPDF({ orientation: 'landscape', unit: 'pt', format: 'letter' });
+            doc.setFontSize(16);
+            doc.text('Deborah Quazzo Angel Investment Portfolio', 40, 40);
+            doc.setFontSize(10);
+            doc.text('As of ' + new Date().toLocaleDateString(), 40, 55);
+            const tableData = filtered.map(inv => {
+                const hp = calculateHoldPeriod(inv.initial_date, inv.exit_date, inv.status);
+                return [inv.company, inv.status, inv.initial_date, hp.category, formatCurrency(inv.amount_invested), formatCurrency(inv.fmv_today), formatCurrency(inv.realized_proceeds), formatCurrency(inv.gain_loss), inv.multiple.toFixed(1)];
+            });
+            doc.autoTable({
+                head: [['Company','Status','Date','Hold','Invested','Current','Realized','Gain/Loss','Multiple']],
+                body: tableData,
+                startY: 70,
+                margin: { left: 40, right: 40 }
+            });
+            doc.save('Quazzo_Portfolio_' + new Date().toISOString().split('T')[0] + '.pdf');
+        }
+ 
+        loadData();
+    </script>
 </body>
 </html>
+ 
